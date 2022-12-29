@@ -1,0 +1,73 @@
+#!/bin/zsh
+
+PYTHON=python3
+SCRIPT=$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")/linereader.py
+
+EXTENSIONS=
+EXCLUDE=
+RECURSIVE=false
+NORMALIZE_SIZE_FORMAT=false
+
+
+usage() {
+  echo 'Usage: liner [-options] [file...]
+Description:
+  liner - Counts amount lines in files and size
+
+Options:
+    -e   Will only shows files with the specified extensions
+    -x   Exclude the specified files and dirs
+    -r   Recursive scan dirs
+    -f   File size in human-readable format
+    -h   Help
+
+Examples:
+  liner -e ".py .js" -x "venv/ node_modules/" -rf example_dir/ - Will show all javascript and python files exclude dir node_modules and venv
+  liner -r example_dir/ - Will show all files in the example_dir
+  liner -rf example_dir/ - You can add -f flag for human-readable format
+
+Noticed:
+  If you used flags -x[exclude] or -e[extensions] your should specify a value!
+  If it is list of values you must used quotes!'
+
+  exit 2
+}
+
+if [[ ${#@} -ne 0 ]];
+then
+while getopts "::e::x:rfh" flag;
+do
+  case "$flag" in
+    e) EXTENSIONS=${OPTARG}
+      ;;
+    x) EXCLUDE=${OPTARG}
+      ;;
+    r) RECURSIVE=true
+      ;;
+    f) NORMALIZE_SIZE_FORMAT=true;;
+    :) echo "Argument missing value: -${OPTARG}"
+      usage
+      ;;
+    h) usage;;
+    \?) echo "Unexpected argument: -${OPTARG}"
+      usage
+      ;;
+    *) usage;;
+  esac
+done
+else
+  usage
+fi
+shift "$((OPTIND-1))"
+
+
+$PYTHON $SCRIPT '{
+    "entry": "'"$1"'",
+    "extensions": "'"$EXTENSIONS"'",
+    "exclude": "'"$EXCLUDE"'",
+    "is_recursive": '$RECURSIVE',
+    "is_normalize_size": '$NORMALIZE_SIZE_FORMAT'
+    }'
+
+
+
