@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 PYTHON=python3
-SCRIPT=$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")/linereader.py
+SCRIPT=/Users/sobraniebluee/Documents/python/line-reader/linereader.py
 
 EXTENSIONS=
 EXCLUDE=

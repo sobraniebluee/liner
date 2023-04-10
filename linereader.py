@@ -4,8 +4,8 @@ import sys
 
 
 class Error:
-    dir = ": No such file or directory"
-    parse = "Error parse params!"
+    DIR = "No such file or directory"
+    PARSE_ARGS = "Error parse params!"
 
 
 class Config:
@@ -42,19 +42,19 @@ def match_filename(filepath, extensions: list[str] = None) -> bool:
     return False
 
 
-def normalize_size_format(size: int):
+def convert_bytes(size: int):
     if not Config.IS_NORMALIZE_SIZE:
         return size
     sizes = ['B', 'K', 'M', 'G']
 
     for i in range(0, len(sizes) - 1):
-        prev = size
+        if size < 900:
+            return str(round(size, 1)) + sizes[i]
+        
+        size = size / 1024.0
+        
 
-        size = size / 1024
-        if size < 0.9:
-            return str(round(prev, 1)).replace('.0', '') + sizes[i]
-
-    return str(round(size, 1)).replace('.0', '') + sizes[-1]
+    return str(round(size, 1)) + sizes[-1]
 
 
 def count_lines(filepath) -> None:
@@ -65,20 +65,19 @@ def count_lines(filepath) -> None:
         with open(filepath, 'rb') as f:
             data = f.read()
             lines = data.split(b'\n')
-            print("size:", normalize_size_format(len(data)), "lines:", len(lines), filepath)
+            print("size:", convert_bytes(len(data)), "lines:", len(lines), filepath)
             Config.TOTAL_LINES += len(lines)
             Config.TOTAL_SIZE += len(data)
             Config.TOTAL_FILES += 1
     except Exception as e:
-        print("Error", e)
+        pass
 
 
 def line_reader(dir_entity):
     if not os.path.isdir(dir_entity) and not os.path.isfile(dir_entity):
-        print("liner:", dir_entity, Error.dir)
+        print("liner:", dir_entity, Error.DIR)
     try:
         if os.path.isdir(dir_entity):
-
             for directory in os.scandir(dir_entity):
                 entity_path = os.path.join(dir_entity, directory.name)
                 if is_exclude(entity_path):
@@ -90,14 +89,14 @@ def line_reader(dir_entity):
         else:
             count_lines(dir_entity)
     except Exception as e:
-        print(e)
+        print("Error", e)
 
 
 def main(params: str):
     try:
         parse_params = json.loads(params)
     except Exception as e:
-        exit(Error.parse)
+        exit(Error.PARSE_ARGS)
     else:
         entry = parse_params.get('entry')
         extensions = parse_params.get('extensions', "")
@@ -116,7 +115,7 @@ def main(params: str):
             print("\nStop...")
         finally:
             print("\ntotal lines:", Config.TOTAL_LINES,
-                  "\ntotal size:", normalize_size_format(Config.TOTAL_SIZE),
+                  "\ntotal size:", convert_bytes(Config.TOTAL_SIZE),
                   "\ntotal files:", Config.TOTAL_FILES)
 
 
